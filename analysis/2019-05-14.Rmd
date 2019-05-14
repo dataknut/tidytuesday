@@ -17,15 +17,19 @@ bibliography: '`r path.expand("~/bibliography.bib")`'
 knitr::opts_chunk$set(echo = TRUE)
 
 library(data.table) # cos I like it
-library(skimr)
-library(ggplot2)
+library(kableExtra) # fancy tables
+library(skimr) # data description
+library(ggplot2) # plots & maps
 ```
 
 # Load data
 
+and inspect it...
+
 ```{r loadData}
 nbwdt <- data.table::as.data.table(readr::read_csv("https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2019/2019-05-14/nobel_winners.csv"))
 
+# skim it
 skimr::skim(nbwdt)
 ```
 
@@ -34,11 +38,13 @@ skimr::skim(nbwdt)
 ```{r trends}
 plotDT <- nbwdt[, .(nPrizes = uniqueN(prize)), keyby = .(prize_year)] # there are duplicates by id where a winner has more than 1 organisational affiliation
 
-ggplot2::ggplot(plotDT, aes(x = prize_year, y = nPrizes)) + geom_line()
+ggplot2::ggplot(plotDT, aes(x = prize_year, y = nPrizes)) + geom_col()
 
 plotDT <- nbwdt[, .(nWinners = uniqueN(laureate_id)), keyby = .(prize_year, category)] # there are duplicates by id where a winner has more than 1 organisational affiliation
 
-ggplot2::ggplot(plotDT, aes(x = prize_year, y = nWinners, colour = category)) + geom_line() +
+ggplot2::ggplot(plotDT, aes(x = prize_year, y = nWinners, fill = category)) + 
+  geom_col() +
+  theme(legend.position = "bottom") +
   facet_wrap(. ~ category)
 
 ```
@@ -49,14 +55,20 @@ Code borrowed from https://github.com/Jazzalchemist/TidyTuesday/blob/master/Week
 
 ```{r mapIt}
 
-# Load packages
-
 # Group countries and calculate n winners
-byCountry <- nbwdt[, .(nWinners = uniqueN(laureate_id)), keyby = .(region = birth_country)]
-setkey(byCountry, region) # data.table
+byCountry <- nbwdt[, .(nWinners = uniqueN(laureate_id)), keyby = .(birth_country)]
+
+kableExtra::kable(head(byCountry[order(-nWinners)], 10), 
+                  caption = "Top 10 countries by number of winners") %>%
+  kable_styling()
+setkey(byCountry, birth_country) # data.table
+
+
 # Load world map
 map.world <- data.table::as.data.table(
-  map_data('world') %>% 
+  ggplot2::map_data('world', wrap=c(0,360), # get the map from maps package & place NZ centre
+                    proj='bonne', # using a bonne projection
+                    param=45) %>%  
   filter(region != "Antarctica")
 )
 setkey(map.world, region) # data.table
@@ -67,7 +79,7 @@ mapData <- byCountry[map.world]
 
 # Set theme
 my_background <- 'white'
-my_textcolour <- "grey19"
+my_textcolour <- "grey20"
 
 my_theme <- theme(plot.title = element_text(face = 'bold', size = 16),
                   plot.background = element_rect(fill = my_background),
@@ -83,7 +95,6 @@ my_theme <- theme(plot.title = element_text(face = 'bold', size = 16),
 
 theme_set(theme_light() + my_theme)
 
-
 # Plot map and save image
 ggplot2::ggplot(data = mapData, aes(x = long, y = lat, group = group)) +
   geom_polygon(aes(fill = nWinners)) +
@@ -91,12 +102,28 @@ ggplot2::ggplot(data = mapData, aes(x = long, y = lat, group = group)) +
        subtitle = paste0(min(nbwdt$prize_year), " - ", max(nbwdt$prize_year)),
        x = "",
        y = "",
-       caption = "Visualisation: @dataknut | Data Source: https://github.com/rfordatascience/tidytuesday/tree/master/data/2019/2019-05-14") +
+       caption = "Visualisation: @dataknut | As viewed from the Pacific using a Bonne projection\nData Source: https://github.com/rfordatascience/tidytuesday/tree/master/data/2019/2019-05-14") +
   guides(
 fill = guide_legend(title = "N winners"))
 ```
 
-Note that the USA didn't string match and that it would be more sensible to divide by the relevant population size to get a per capita figure.
+Where did the United States of America data go on the map?
+
+```{r checkMapCountries}
+t <- map.world[region %like% "USA"]
+
+head(t)
+```
+
+Oh. Looks like we need some string wrangling...
+
+# What did we learn?
+
+ * The number of winners per year seems to be increasing (perhaps due to more scientific collaboration);
+ * This is not true in literature - which is rarely won by more than one author at a time (so scientists collaborate but writers don't :-);
+ * Bonne projections are kinda interesting;
+ * The USA (amongst others) didn't string match - it would be helpful if standard country codes could _always_ be used;
+ * It would be more sensible to divide the number of winners by the relevant population size to get a per capita figure.
 
 # R packages used
 

@@ -27,6 +27,7 @@
 <script src="2019-05-14_files/navigation-1.1/codefolding.js"></script>
 <link href="2019-05-14_files/highlightjs-9.12.0/default.css" rel="stylesheet" />
 <script src="2019-05-14_files/highlightjs-9.12.0/highlight.js"></script>
+<script src="2019-05-14_files/kePrint-0.0.1/kePrint.js"></script>
 
 <style type="text/css">code{white-space: pre;}</style>
 <style type="text/css">
@@ -307,13 +308,14 @@ div.tocify {
 
 <h1 class="title toc-ignore">TidyTuesday 14th May 2019</h1>
 <h4 class="author"><code>@dataknut</code></h4>
-<h4 class="date">Last run at: 2019-05-14 16:03:41</h4>
+<h4 class="date">Last run at: 2019-05-14 16:42:00</h4>
 
 </div>
 
 
 <div id="load-data" class="section level1">
 <h1><span class="header-section-number">1</span> Load data</h1>
+<p>and inspect it…</p>
 <pre class="r"><code>nbwdt &lt;- data.table::as.data.table(readr::read_csv(&quot;https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2019/2019-05-14/nobel_winners.csv&quot;))</code></pre>
 <pre><code>## Parsed with column specification:
 ## cols(
@@ -336,7 +338,8 @@ div.tocify {
 ##   death_city = col_character(),
 ##   death_country = col_character()
 ## )</code></pre>
-<pre class="r"><code>skimr::skim(nbwdt)</code></pre>
+<pre class="r"><code># skim it
+skimr::skim(nbwdt)</code></pre>
 <pre><code>## Skim summary statistics
 ##  n obs: 969 
 ##  n variables: 18 
@@ -375,38 +378,143 @@ div.tocify {
 <h1><span class="header-section-number">2</span> Trends over time</h1>
 <pre class="r"><code>plotDT &lt;- nbwdt[, .(nPrizes = uniqueN(prize)), keyby = .(prize_year)] # there are duplicates by id where a winner has more than 1 organisational affiliation
 
-ggplot2::ggplot(plotDT, aes(x = prize_year, y = nPrizes)) + geom_line()</code></pre>
+ggplot2::ggplot(plotDT, aes(x = prize_year, y = nPrizes)) + geom_col()</code></pre>
 <p><img src="2019-05-14_files/figure-html/trends-1.png" width="672" /></p>
 <pre class="r"><code>plotDT &lt;- nbwdt[, .(nWinners = uniqueN(laureate_id)), keyby = .(prize_year, category)] # there are duplicates by id where a winner has more than 1 organisational affiliation
 
-ggplot2::ggplot(plotDT, aes(x = prize_year, y = nWinners, colour = category)) + geom_line() +
+ggplot2::ggplot(plotDT, aes(x = prize_year, y = nWinners, fill = category)) + 
+  geom_col() +
+  theme(legend.position = &quot;bottom&quot;) +
   facet_wrap(. ~ category)</code></pre>
 <p><img src="2019-05-14_files/figure-html/trends-2.png" width="672" /></p>
 </div>
 <div id="map-it" class="section level1">
 <h1><span class="header-section-number">3</span> Map it</h1>
 <p>Code borrowed from <a href="https://github.com/Jazzalchemist/TidyTuesday/blob/master/Week%2019%202019/Student%20Ratio.R">https://github.com/Jazzalchemist/TidyTuesday/blob/master/Week%2019%202019/Student%20Ratio.R</a></p>
-<pre class="r"><code># Load packages
+<pre class="r"><code># Group countries and calculate n winners
+byCountry &lt;- nbwdt[, .(nWinners = uniqueN(laureate_id)), keyby = .(birth_country)]
 
-# Group countries and calculate n winners
-byCountry &lt;- nbwdt[, .(nWinners = uniqueN(laureate_id)), keyby = .(region = birth_country)]
-setkey(byCountry, region) # data.table
+kableExtra::kable(head(byCountry[order(-nWinners)], 10), 
+                  caption = &quot;Top 10 countries by number of winners&quot;) %&gt;%
+  kable_styling()</code></pre>
+<table class="table" style="margin-left: auto; margin-right: auto;">
+<caption>
+<span id="tab:mapIt">Table 3.1: </span>Top 10 countries by number of winners
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+birth_country
+</th>
+<th style="text-align:right;">
+nWinners
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+United States of America
+</td>
+<td style="text-align:right;">
+257
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+United Kingdom
+</td>
+<td style="text-align:right;">
+84
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Germany
+</td>
+<td style="text-align:right;">
+61
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+France
+</td>
+<td style="text-align:right;">
+51
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Sweden
+</td>
+<td style="text-align:right;">
+29
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Japan
+</td>
+<td style="text-align:right;">
+24
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:right;">
+23
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Canada
+</td>
+<td style="text-align:right;">
+18
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Netherlands
+</td>
+<td style="text-align:right;">
+18
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Italy
+</td>
+<td style="text-align:right;">
+17
+</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code>setkey(byCountry, birth_country) # data.table
+
+
 # Load world map
 map.world &lt;- data.table::as.data.table(
-  map_data(&#39;world&#39;) %&gt;% 
+  ggplot2::map_data(&#39;world&#39;, wrap=c(0,360), # get the map from maps package &amp; place NZ centre
+                    proj=&#39;bonne&#39;, # using a bonne projection
+                    param=45) %&gt;%  
   filter(region != &quot;Antarctica&quot;)
 )
 setkey(map.world, region) # data.table
 summary(map.world)</code></pre>
-<pre><code>##       long              lat              group            order       
-##  Min.   :-179.87   Min.   :-58.492   Min.   :   1.0   Min.   :     1  
-##  1st Qu.: -67.05   1st Qu.:  6.396   1st Qu.: 418.0   1st Qu.: 28746  
-##  Median :  18.55   Median : 35.778   Median : 847.0   Median : 52844  
-##  Mean   :  12.42   Mean   : 29.765   Mean   : 835.8   Mean   : 52719  
-##  3rd Qu.:  80.26   3rd Qu.: 54.972   3rd Qu.:1293.0   3rd Qu.: 76960  
-##  Max.   : 190.27   Max.   : 83.600   Max.   :1627.0   Max.   :100964  
+<pre><code>##       long              lat               group            order       
+##  Min.   :-2.0524   Min.   :-2.73267   Min.   :   1.0   Min.   :     1  
+##  1st Qu.:-1.0443   1st Qu.:-0.87292   1st Qu.: 421.0   1st Qu.: 28842  
+##  Median :-0.5568   Median :-0.36550   Median : 856.0   Median : 53010  
+##  Mean   :-0.2185   Mean   :-0.49933   Mean   : 842.2   Mean   : 52881  
+##  3rd Qu.: 0.6283   3rd Qu.: 0.04802   3rd Qu.:1303.0   3rd Qu.: 77189  
+##  Max.   : 2.0401   Max.   : 0.69800   Max.   :1639.0   Max.   :101258  
 ##     region           subregion        
-##  Length:94680       Length:94680      
+##  Length:94932       Length:94932      
 ##  Class :character   Class :character  
 ##  Mode  :character   Mode  :character  
 ##                                       
@@ -417,7 +525,7 @@ mapData &lt;- byCountry[map.world]
 
 # Set theme
 my_background &lt;- &#39;white&#39;
-my_textcolour &lt;- &quot;grey19&quot;
+my_textcolour &lt;- &quot;grey20&quot;
 
 my_theme &lt;- theme(plot.title = element_text(face = &#39;bold&#39;, size = 16),
                   plot.background = element_rect(fill = my_background),
@@ -433,7 +541,6 @@ my_theme &lt;- theme(plot.title = element_text(face = &#39;bold&#39;, size = 16)
 
 theme_set(theme_light() + my_theme)
 
-
 # Plot map and save image
 ggplot2::ggplot(data = mapData, aes(x = long, y = lat, group = group)) +
   geom_polygon(aes(fill = nWinners)) +
@@ -441,14 +548,35 @@ ggplot2::ggplot(data = mapData, aes(x = long, y = lat, group = group)) +
        subtitle = paste0(min(nbwdt$prize_year), &quot; - &quot;, max(nbwdt$prize_year)),
        x = &quot;&quot;,
        y = &quot;&quot;,
-       caption = &quot;Visualisation: @dataknut | Data Source: https://github.com/rfordatascience/tidytuesday/tree/master/data/2019/2019-05-14&quot;) +
+       caption = &quot;Visualisation: @dataknut | As viewed from the Pacific using a Bonne projection\nData Source: https://github.com/rfordatascience/tidytuesday/tree/master/data/2019/2019-05-14&quot;) +
   guides(
 fill = guide_legend(title = &quot;N winners&quot;))</code></pre>
 <p><img src="2019-05-14_files/figure-html/mapIt-1.png" width="672" /></p>
-<p>Note that the USA didn’t string match and that it would be more sensible to divide by the relevant population size to get a per capita figure.</p>
+<p>Where did the United States of America data go on the map?</p>
+<pre class="r"><code>t &lt;- map.world[region %like% &quot;USA&quot;]
+
+head(t)</code></pre>
+<pre><code>##         long       lat group order region subregion
+## 1: 0.3977970 -1.398085  1455 91958    USA    Hawaii
+## 2: 0.3972115 -1.399124  1455 91959    USA    Hawaii
+## 3: 0.3963272 -1.399306  1455 91960    USA    Hawaii
+## 4: 0.3928920 -1.398411  1455 91961    USA    Hawaii
+## 5: 0.3923716 -1.397554  1455 91962    USA    Hawaii
+## 6: 0.3919790 -1.393010  1455 91963    USA    Hawaii</code></pre>
+<p>Oh. Looks like we need some string wrangling…</p>
+</div>
+<div id="what-did-we-learn" class="section level1">
+<h1><span class="header-section-number">4</span> What did we learn?</h1>
+<ul>
+<li>The number of winners per year seems to be increasing (perhaps due to more scientific collaboration);</li>
+<li>This is not true in literature - which is rarely won by more than one author at a time (so scientists collaborate but writers don’t :-);</li>
+<li>Bonne projections are kinda interesting;</li>
+<li>The USA (amongst others) didn’t string match - it would be helpful if standard country codes could <em>always</em> be used;</li>
+<li>It would be more sensible to divide the number of winners by the relevant population size to get a per capita figure.</li>
+</ul>
 </div>
 <div id="r-packages-used" class="section level1">
-<h1><span class="header-section-number">4</span> R packages used</h1>
+<h1><span class="header-section-number">5</span> R packages used</h1>
 <ul>
 <li>data.table <span class="citation">(Dowle et al. 2015)</span></li>
 <li>maps <span class="citation">(Richard A. Becker, Ray Brownrigg. Enhancements by Thomas P Minka, and Deckmyn. 2018)</span></li>
