@@ -24,7 +24,10 @@ library(ggplot2) # plots & maps
 
 # Load data
 
-and inspect it...
+
+See: https://github.com/rfordatascience/tidytuesday/blob/master/README.md
+
+Load and inspect some of it...
 
 ```{r loadData}
 nbwdt <- data.table::as.data.table(readr::read_csv("https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2019/2019-05-14/nobel_winners.csv"))
@@ -132,5 +135,11 @@ Oh. Looks like we need some string wrangling...
  * ggplot2 [@ggplot2]
  * readr [@readr]
  * skimr [@skimr]
+
+# Data sources:
+
+https://github.com/rfordatascience/tidytuesday/blob/master/README.md
+
+[Kaggle](https://www.kaggle.com/nobelfoundation/nobel-laureates)
 
 # References
