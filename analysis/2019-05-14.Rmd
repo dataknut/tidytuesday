@@ -1,0 +1,109 @@
+---
+title: "TidyTuesday 14th May 2019"
+author: '`@dataknut`'
+date: 'Last run at: `r Sys.time()`'
+output:
+  bookdown::html_document2:
+    code_folding: hide
+    number_sections: yes
+    self_contained: no
+    toc: yes
+    toc_depth: 2
+    toc_float: yes
+bibliography: '`r path.expand("~/bibliography.bib")`'
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(data.table) # cos I like it
+library(skimr)
+library(ggplot2)
+```
+
+# Load data
+
+```{r loadData}
+nbwdt <- data.table::as.data.table(readr::read_csv("https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2019/2019-05-14/nobel_winners.csv"))
+
+skimr::skim(nbwdt)
+```
+
+# Trends over time
+
+```{r trends}
+plotDT <- nbwdt[, .(nPrizes = uniqueN(prize)), keyby = .(prize_year)] # there are duplicates by id where a winner has more than 1 organisational affiliation
+
+ggplot2::ggplot(plotDT, aes(x = prize_year, y = nPrizes)) + geom_line()
+
+plotDT <- nbwdt[, .(nWinners = uniqueN(laureate_id)), keyby = .(prize_year, category)] # there are duplicates by id where a winner has more than 1 organisational affiliation
+
+ggplot2::ggplot(plotDT, aes(x = prize_year, y = nWinners, colour = category)) + geom_line() +
+  facet_wrap(. ~ category)
+
+```
+
+# Map it
+
+Code borrowed from https://github.com/Jazzalchemist/TidyTuesday/blob/master/Week%2019%202019/Student%20Ratio.R
+
+```{r mapIt}
+
+# Load packages
+
+# Group countries and calculate n winners
+byCountry <- nbwdt[, .(nWinners = uniqueN(laureate_id)), keyby = .(region = birth_country)]
+setkey(byCountry, region) # data.table
+# Load world map
+map.world <- data.table::as.data.table(
+  map_data('world') %>% 
+  filter(region != "Antarctica")
+)
+setkey(map.world, region) # data.table
+summary(map.world)
+
+# Join datasets the data.table way
+mapData <- byCountry[map.world]
+
+# Set theme
+my_background <- 'white'
+my_textcolour <- "grey19"
+
+my_theme <- theme(plot.title = element_text(face = 'bold', size = 16),
+                  plot.background = element_rect(fill = my_background),
+                  plot.subtitle = element_text(size = 14, colour = my_textcolour),
+                  plot.caption = element_text(size = 8, hjust = 1.15, colour = my_textcolour),
+                  panel.background = element_rect(fill = my_background, colour = my_background),
+                  panel.border = element_blank(),
+                  panel.grid.major.y = element_blank(),
+                  panel.grid.minor.y = element_blank(),
+                  panel.grid.major.x = element_blank(),
+                  panel.grid.minor.x = element_blank(),
+                  axis.text = element_blank())
+
+theme_set(theme_light() + my_theme)
+
+
+# Plot map and save image
+ggplot2::ggplot(data = mapData, aes(x = long, y = lat, group = group)) +
+  geom_polygon(aes(fill = nWinners)) +
+  labs(title = "Number of Nobel Prize Winners",
+       subtitle = paste0(min(nbwdt$prize_year), " - ", max(nbwdt$prize_year)),
+       x = "",
+       y = "",
+       caption = "Visualisation: @dataknut | Data Source: https://github.com/rfordatascience/tidytuesday/tree/master/data/2019/2019-05-14") +
+  guides(
+fill = guide_legend(title = "N winners"))
+```
+
+Note that the USA didn't string match and that it would be more sensible to divide by the relevant population size to get a per capita figure.
+
+# R packages used
+
+ * data.table [@data.table]
+ * maps [@maps]
+ * ggplot2 [@ggplot2]
+ * readr [@readr]
+ * skimr [@skimr]
+
+# References
