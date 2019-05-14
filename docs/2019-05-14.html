@@ -308,7 +308,7 @@ div.tocify {
 
 <h1 class="title toc-ignore">TidyTuesday 14th May 2019</h1>
 <h4 class="author"><code>@dataknut</code></h4>
-<h4 class="date">Last run at: 2019-05-14 16:42:00</h4>
+<h4 class="date">Last run at: 2019-05-14 17:00:20</h4>
 
 </div>
 
@@ -344,7 +344,7 @@ skimr::skim(nbwdt)</code></pre>
 ##  n obs: 969 
 ##  n variables: 18 
 ## 
-## ── Variable type:character ──────────────────────────────────────────────────────────────────────────────────────────────
+## ── Variable type:character ──────────────────────────────────────────────────────────────────────────────
 ##              variable missing complete   n min max empty n_unique
 ##            birth_city      28      941 969   3  32     0      601
 ##         birth_country      26      943 969   4  45     0      121
@@ -361,12 +361,12 @@ skimr::skim(nbwdt)</code></pre>
 ##                 prize       0      969 969  26  53     0      579
 ##           prize_share       0      969 969   3   3     0        4
 ## 
-## ── Variable type:Date ───────────────────────────────────────────────────────────────────────────────────────────────────
+## ── Variable type:Date ───────────────────────────────────────────────────────────────────────────────────
 ##    variable missing complete   n        min        max     median n_unique
 ##  birth_date      31      938 969 1817-11-30 1997-07-12 1916-09-14      866
 ##  death_date     352      617 969 1903-11-01 2017-02-08 1980-04-15      582
 ## 
-## ── Variable type:numeric ────────────────────────────────────────────────────────────────────────────────────────────────
+## ── Variable type:numeric ────────────────────────────────────────────────────────────────────────────────
 ##     variable missing complete   n    mean     sd   p0  p25  p50  p75 p100
 ##  laureate_id       0      969 969  470.15 274.59    1  230  462  718  937
 ##   prize_year       0      969 969 1970.29  32.94 1901 1947 1976 1999 2016
@@ -552,17 +552,43 @@ ggplot2::ggplot(data = mapData, aes(x = long, y = lat, group = group)) +
   guides(
 fill = guide_legend(title = &quot;N winners&quot;))</code></pre>
 <p><img src="2019-05-14_files/figure-html/mapIt-1.png" width="672" /></p>
-<p>Where did the United States of America data go on the map?</p>
-<pre class="r"><code>t &lt;- map.world[region %like% &quot;USA&quot;]
+<p>Where did the United States of America and the United Kingdom go on the map?</p>
+<pre class="r"><code>t &lt;- map.world[region %like% &quot;USA&quot; | region %like% &quot;UK&quot;]
 
-head(t)</code></pre>
-<pre><code>##         long       lat group order region subregion
-## 1: 0.3977970 -1.398085  1455 91958    USA    Hawaii
-## 2: 0.3972115 -1.399124  1455 91959    USA    Hawaii
-## 3: 0.3963272 -1.399306  1455 91960    USA    Hawaii
-## 4: 0.3928920 -1.398411  1455 91961    USA    Hawaii
-## 5: 0.3923716 -1.397554  1455 91962    USA    Hawaii
-## 6: 0.3919790 -1.393010  1455 91963    USA    Hawaii</code></pre>
+kableExtra::kable(table(t$region), caption = &quot;Number of polygons for specified country name strings&quot;) %&gt;% kable_styling()</code></pre>
+<table class="table" style="margin-left: auto; margin-right: auto;">
+<caption>
+<span id="tab:checkMapCountries">Table 3.2: </span>Number of polygons for specified country name strings
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+Var1
+</th>
+<th style="text-align:right;">
+Freq
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+UK
+</td>
+<td style="text-align:right;">
+1032
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+USA
+</td>
+<td style="text-align:right;">
+5753
+</td>
+</tr>
+</tbody>
+</table>
 <p>Oh. Looks like we need some string wrangling…</p>
 </div>
 <div id="what-did-we-learn" class="section level1">

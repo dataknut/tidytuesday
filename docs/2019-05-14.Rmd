@@ -107,12 +107,12 @@ ggplot2::ggplot(data = mapData, aes(x = long, y = lat, group = group)) +
 fill = guide_legend(title = "N winners"))
 ```
 
-Where did the United States of America data go on the map?
+Where did the United States of America and the United Kingdom go on the map?
 
 ```{r checkMapCountries}
-t <- map.world[region %like% "USA"]
+t <- map.world[region %like% "USA" | region %like% "UK"]
 
-head(t)
+kableExtra::kable(table(t$region), caption = "Number of polygons for specified country name strings") %>% kable_styling()
 ```
 
 Oh. Looks like we need some string wrangling...
